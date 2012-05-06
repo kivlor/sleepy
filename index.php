@@ -165,61 +165,32 @@
 				
 				attachObject: function()
 				{
-					//random between simulants and relaxants
-					if(parseInt(Math.random() * 3) > 0)
-					{
-						game.attachStimulant();
-					}
-					else
-					{
-						game.attachRelaxant();
-					}
-				},
-				
-				attachStimulant: function()
-				{
-					var stimulant = $('<div class="stimulant object" />');
+					var o = $('<div class="stimulant object" />');
+					var v = objects[parseInt(Math.random() * objects.length)];
+					var t = v.h * -1;
+					var l = Math.round(Math.random() * (game.wwidth - v.h));
 					
-					stimulant
+					o
+					.addClass(v.c)
 					.css({
-						position: 'absolute',
-						top: -75,
-						left: parseInt(Math.random() * game.wwidth),
-						background: '#0c0',
-						width: 50,
-						height: 75
+						top: t,
+						left: l,
 					})
 					.bind('click', function(){
 						$(this).remove();
 						
-						game.updateScore(10);
-					})
-					.appendTo(game.canvas)
-					.animate({top: game.underground}, game.falltime, 'linear');
-				},
-				
-				attachRelaxant: function()
-				{
-					var stimulant = $('<div class="relaxant object" />');
-					
-					stimulant
-					.css({
-						position: 'absolute',
-						top: -75,
-						left: parseInt(Math.random() * game.wwidth),
-						background: '#c00',
-						width: 50,
-						height: 75
-					})
-					.bind('click', function(){
-						$(this).remove();
-						
-						game.updateScore(-10);
+						game.updateScore(v.p);
 					})
 					.appendTo(game.canvas)
 					.animate({top: game.underground}, game.falltime, 'linear');
 				},
 			}
+			
+			objects = [
+				{c: 'redbull', w: 60, h: 148, p: 20},
+				{c: 'coffee', w: 108, h: 128, p: 10},
+				{c: 'coke', w: 76, h: 136, p: 5},
+			];
 		</script>
 	</body>
 </html>

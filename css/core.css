@@ -104,3 +104,27 @@ html, body {
 			height: 108px;
 			background: transparent url('../img/frank.gif') 50% 50% no-repeat;
 		}
+
+/* ===== stimulats ===== */
+
+div.stimulant {
+	position: absolute;
+}
+
+	div.redbull {
+		width: 60px;
+		height: 148px;
+		background: transparent url('../img/stimulants.png') 0 0 no-repeat;
+	}
+	
+	div.coffee {
+		width: 108px;
+		height: 128px;
+		background: transparent url('../img/stimulants.png') -60px 0 no-repeat;
+	}
+	
+	div.coke {
+		width: 76px;
+		height: 136px;
+		background: transparent url('../img/stimulants.png') -168px 0 no-repeat;
+	}
