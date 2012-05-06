@@ -96,8 +96,8 @@
 					game.attachTimer();
 					game.attachScorer();
 					
-					game.timerInt = setInterval(game.updateTime, 1000);
-					game.objectInt = setInterval(game.attachObject, 400);
+					game.timerInt = setInterval(game.updateTime, 1000); // this will adjust the game length, higer = longer
+					game.objectInt = setInterval(game.attachObject, 600); // this will adjust the frequency of object, higher = less often
 				},
 				
 				stopGame: function()
