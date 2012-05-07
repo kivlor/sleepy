@@ -38,7 +38,9 @@
 				score:			0,
 				scorer:			$('<div id="scorer" />'),
 				
-				pps:			120, // pixels per second
+				pps:			200, // pixels per second
+				
+				fallspace:		null,
 				
 				// init!!
 				init: function()
@@ -72,6 +74,8 @@
 					// set calc vars
 					game.wwidth = game.window.width();
 					game.wheight = $(window).height();
+					
+					game.fallspace = [0,game.wwidth];
 					
 					game.falltime = parseInt((this.wheight / this.pps) * 1000); // the time it should take a stimlant to fall
 					game.underground = parseInt(this.wheight + 75 + 10); // the top position to hide an element below the viewport
