@@ -169,11 +169,13 @@
 				
 				attachObject: function()
 				{
+					//build object
 					var o = $('<div class="stimulant object" />');
 					var v = objects[parseInt(Math.random() * objects.length)];
 					var t = v.h * -1;
-					var l = Math.round(Math.random() * (game.wwidth - v.h));
+					var l = game.getLeftPos(v.w);
 					
+					//add to dom
 					o
 					.addClass(v.c)
 					.css({
@@ -186,8 +188,59 @@
 						game.updateScore(v.p);
 					})
 					.appendTo(game.canvas)
-					.animate({top: game.underground}, game.falltime, 'linear');
+					.animate({top: game.underground}, game.falltime, 'linear');	
+					
+					game.getNextFallSpace(v.w, l);
 				},
+				
+				//mathmatical!
+				
+				getLeftPos: function(width)
+				{
+					// given an objects width, get a random left position within the fall space
+					
+					// default return	
+					var out = 0;
+					
+					//set min and max
+					var min = typeof(game.fallspace[0]) !== 'undefined' ? parseInt(game.fallspace[0]) : 0; // default to 0
+					var max = typeof(game.fallspace[1]) !== 'undefined' ? parseInt(game.fallspace[1] - width) : (game.wwidth - width); // default to game window width - object width
+					
+					out = min + Math.ceil(Math.random() * (max - min));
+					
+					return out;
+				},
+				
+				getNextFallSpace: function(width, left)
+				{
+					// callculate the next fall space given the previous object width and left pos
+					
+					// get right side
+					var right = game.wwidth - (left + width);
+					
+					if(left > right)
+					{
+						game.fallspace = [0, left];
+					}
+					else if(left < right)
+					{
+						game.fallspace = [(left + width), game.wwidth];
+					}
+					else
+					{
+						// left or right
+						if(Math.round(Math.random() * 1) === 1)
+						{
+							game.fallspace = [0, left];
+						}
+						else
+						{
+							game.fallspace = [(left + width), game.wwidth];	
+						}
+					}
+					
+					return;
+				}
 			}
 			
 			objects = [
