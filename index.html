@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		
+		<title>Sleepy</title>
+		
+		<link href="css/core.css" rel="stylesheet" type="text/css" />
+		<script src="js/jquery.js"></script>
+	</head>
+	<body>
+		<div id="wrap">
+			<div id="bubble">Sleepy needs javascript enabled to run. Enable javascript in your browser settings and try again</div>
+		</div>
+		
+		<script type="text/javascript">
+			jQuery(function($){
+				// change no js message			
+				$('#bubble').text('...');
+				
+				// init the game when jquery is ready
+				game.init();
+			});
+			
+			// the game, one big object!
+			game = {
+				
+				// set some defaults
+				window:			$(window),
+				canvas:			$('body'),
+				
+				firstRun: 		true,
+				running: 		false,
+				msg:			$('#bubble'),
+				
+				time:			10,
+				timer:			$('<canvas id="timer" />'),
+				timerContext:	null,
+				
+				score:			0,
+				scorer:			$('<canvas id="scorer" />'),
+				scorerContext:	null,
+				
+				num:			null, // stores the number image
+				
+				pps:			200, // pixels per second
+				
+				fallspace:		null,
+				
+				// init!!
+				init: function()
+				{
+					// calibrate
+					game.calibrate();
+									
+					// change the game message
+					game.msg.text('Press spacebar to start...');
+					
+					//set spacebar start
+					game.window.on('keypress', function(e){
+						if(game.running === false && e.keyCode === 32)
+						{
+							game.msg.fadeOut(100, function(){ $(this).text(''); });
+							game.startGame();
+						}
+					});
+					
+					// set images
+					game.num = new Image();
+					game.num.src = 'img/num.png';
+					
+					// reset values on resize
+					game.window.on('resize', function(){
+						// recalibrate
+						game.calibrate();				
+					});
+				},
+				
+				calibrate: function()
+				{
+					// set calc vars
+					game.wwidth = game.window.width();
+					game.wheight = $(window).height();
+					
+					game.fallspace = [0,game.wwidth];
+					
+					game.falltime = parseInt((this.wheight / this.pps) * 1000); // the time it should take a stimlant to fall
+					game.underground = parseInt(this.wheight + 75 + 10); // the top position to hide an element below the viewport
+				},
+				
+				finish: function()
+				{
+					game.msg.text('You scored ' + game.score + ', press spacebar to restart...').fadeIn(100);
+					game.score = 0;
+					game.window.on('keypress', function(e){
+						if(game.running === false && e.keyCode === 32)
+						{
+							game.msg.fadeOut(100, function(){ $(this).text(''); });
+							game.startGame();
+						}
+					});
+				},
+				
+				startGame: function()
+				{
+					game.running = true;
+					game.attachTimer();
+					game.attachScorer();
+					
+					game.timerInt = setInterval(game.updateTime, 1000);
+					game.objectInt = setInterval(game.attachObject, 700); // this will adjust the frequency of object, higher = less often
+				},
+				
+				stopGame: function()
+				{
+					game.running = false;
+					game.canvas.find('.object').remove();
+					game.detachTimer();
+					game.detachScorer();
+					
+					clearInterval(game.timerInt);
+					clearInterval(game.objectInt);
+					
+					game.finish();
+				},
+				
+				attachTimer: function(){
+					game.timer.css({
+						position: 'absolute',
+						bottom: 24,
+						right: 24,
+						zIndex: 20,
+						})
+					.attr('width',88)
+					.attr('height',24);
+					
+					game.canvas.append(game.timer);
+					
+					//start canvas
+					game.timerContext = game.timer[0].getContext('2d');
+					
+					//draw
+					game.drawTimer();
+				},
+				
+				drawTimer: function()
+				{
+					//clear
+					game.timerContext.clearRect(0,0,88,24);
+				
+					//mins, seconds
+					var min = game.time >= 60 ? Math.floor(game.time / 60) : 0;
+					var sec = game.time >= 60 ? game.time - (min * 60) : game.time;
+					
+					//figure out segments
+					var m1 = min >= 10 ? Math.floor(min / 10) : 0;
+					var m2 = min >= 10 ? min - (m1 * 10) : min;
+					var s1 = sec >= 10 ? Math.floor(sec / 10) : 0;
+					var s2 = sec >= 10 ? sec - (s1 * 10) : sec;
+					
+					//Draw!
+					
+					//minutes
+					game.timerContext.drawImage(game.num,0,(m1 > 0 ? m1 * 24 : 0),16,24,0,0,16,24);
+					game.timerContext.drawImage(game.num,0,(m2 > 0 ? m2 * 24 : 0),16,24,20,0,16,24);
+					
+					//seperator
+					game.timerContext.drawImage(game.num,0,240,12,24,36,0,12,24);
+					
+					//seconds
+					game.timerContext.drawImage(game.num,0,(s1 > 0 ? s1 * 24 : 0),16,24,52,0,16,24);
+					game.timerContext.drawImage(game.num,0,(s2 > 0 ? s2 * 24 : 0),16,24,72,0,16,24);
+					
+					return;
+				},
+				
+				updateTime: function()
+				{
+					game.time = game.time - 1;
+					
+					game.drawTimer();
+					
+					if(game.time === 0)
+					{
+						game.time = 10;
+						game.stopGame();
+					}	
+					return true;
+				},
+				
+				detachTimer: function()
+				{
+					game.timer.remove();
+					game.timerContext = null;
+				},
+				
+				attachScorer: function()
+				{
+					game.scorer.css({
+						position: 'absolute',
+						bottom: 24,
+						left: 24,
+						zIndex: 20,
+						})
+					.attr('width',88)
+					.attr('height',24);
+					
+					game.canvas.append(game.scorer);
+					
+					//start canvas
+					game.scorerContext = game.scorer[0].getContext('2d');
+					
+					//draw
+					game.drawScorer();
+				},
+				
+				drawScorer: function()
+				{
+					//clear
+					game.scorerContext.clearRect(0,0,88,24);
+					
+					var score = String(game.score);
+					var parts = score.split('');
+					
+					//loop parts
+					for (var i = 0; i < parts.length; i++)
+					{	
+						game.scorerContext.drawImage(game.num,0,(parts[i] > 0 ? parts[i] * 24 : 0),16,24,(i > 0 ? i * 20 : i),0,16,24);
+					}
+				},
+				
+				updateScore: function(s)
+				{
+					game.score = game.score + s;
+					game.score = game.score < 0 ? 0 : game.score;
+					
+					game.drawScorer();
+				},
+				
+				detachScorer: function(){
+					game.scorer.remove();
+				},
+				
+				attachObject: function()
+				{
+					//build object
+					var o = $('<div class="stimulant object" />');
+					var v = objects[parseInt(Math.random() * objects.length)];
+					var t = v.h * -1;
+					var l = game.getLeftPos(v.w);
+					
+					//add to dom
+					o
+					.addClass(v.c)
+					.css({
+						top: t,
+						left: l,
+						zIndex: 10,
+					})
+					.bind('click', function(){
+						$(this).remove();
+						
+						game.updateScore(v.p);
+					})
+					.appendTo(game.canvas)
+					.animate({top: game.underground}, game.falltime, 'linear');	
+					
+					game.getNextFallSpace(v.w, l);
+				},
+				
+				//mathmatical!
+				getLeftPos: function(width)
+				{
+					// given an objects width, get a random left position within the fall space
+					
+					// default return	
+					var out = 0;
+					
+					//set min and max
+					var min = typeof(game.fallspace[0]) !== 'undefined' ? parseInt(game.fallspace[0]) : 0; // default to 0
+					var max = typeof(game.fallspace[1]) !== 'undefined' ? parseInt(game.fallspace[1] - width) : (game.wwidth - width); // default to game window width - object width
+					
+					out = min + Math.ceil(Math.random() * (max - min));
+					
+					return out;
+				},
+				
+				getNextFallSpace: function(width, left)
+				{
+					// callculate the next fall space given the previous object width and left pos
+					
+					// get right side
+					var right = game.wwidth - (left + width);
+					
+					if(left > right)
+					{
+						game.fallspace = [0, left];
+					}
+					else if(left < right)
+					{
+						game.fallspace = [(left + width), game.wwidth];
+					}
+					else
+					{
+						// left or right
+						if(Math.round(Math.random() * 1) === 1)
+						{
+							game.fallspace = [0, left];
+						}
+						else
+						{
+							game.fallspace = [(left + width), game.wwidth];	
+						}
+					}
+					
+					return;
+				}
+			}
+			
+			objects = [
+				{c: 'redbull', w: 60, h: 148, p: 20},
+				{c: 'coffee', w: 108, h: 128, p: 10},
+				{c: 'coke', w: 76, h: 136, p: 5},
+			];
+		</script>
+	</body>
+</html>
