@@ -37,11 +37,12 @@
 				timer:			$('<canvas id="timer" />'),
 				timerContext:	null,
 				
-				score:			0,
+				score:			100,
 				scorer:			$('<canvas id="scorer" />'),
 				scorerContext:	null,
 				
 				num:			null, // stores the number image
+				bar:			null, // stores the bar image
 				
 				pps:			200, // pixels per second
 				
@@ -90,8 +91,16 @@
 				
 				finish: function()
 				{
-					game.msg.text('You scored ' + game.score + ', press spacebar to restart...').fadeIn(100);
-					game.score = 0;
+					if(game.score > 50)
+					{
+						game.msg.text('Rad, you kept yourself awake! Press spacebar to try again...').fadeIn(100);
+					}
+					else
+					{
+						game.msg.text('Eeeek, you fell asleep! Press spacebar to try again...').fadeIn(100);
+					}
+					
+					game.score = 100;
 					game.window.on('keypress', function(e){
 						if(game.running === false && e.keyCode === 32)
 						{
@@ -109,6 +118,7 @@
 					
 					game.timerInt = setInterval(game.updateTime, 1000);
 					game.objectInt = setInterval(game.attachObject, 700); // this will adjust the frequency of object, higher = less often
+					game.scoreInt = setInterval(game.decreaseScore, 300); // decrease score over time, goal is to finish above 50
 				},
 				
 				stopGame: function()
@@ -120,6 +130,7 @@
 					
 					clearInterval(game.timerInt);
 					clearInterval(game.objectInt);
+					clearInterval(game.scoreInt);
 					
 					game.finish();
 				},
@@ -217,24 +228,40 @@
 				drawScorer: function()
 				{
 					//clear
-					game.scorerContext.clearRect(0,0,88,24);
+					game.scorerContext.clearRect(0,0,40,140);
 					
-					var score = String(game.score);
-					var parts = score.split('');
+					//bar
+					game.scorerContext.drawImage(game.bar,0,0);
 					
-					//loop parts
-					for (var i = 0; i < parts.length; i++)
-					{	
-						game.scorerContext.drawImage(game.num,0,(parts[i] > 0 ? parts[i] * 24 : 0),16,24,(i > 0 ? i * 20 : i),0,16,24);
+					//fill based on energy
+					var nonenergy = 120 * ((100 - game.score) / 100);
+					var height = Math.ceil(nonenergy / 4) * 4;
+					
+					if(height > 0)
+					{
+						game.scorerContext.fillStyle = '#D8D8D8';
+						game.scorerContext.fillRect(8,12,24,height);
+						
+						//nonenergy is less than 96% andd greenbar
+						if(height < 120)
+						{
+							game.scorerContext.fillStyle = '#00B800';
+							game.scorerContext.fillRect(8,12 + height,24,4);
+						}
 					}
 				},
 				
 				updateScore: function(s)
 				{
-					game.score = game.score + s;
+					game.score = (game.score + s > 100) ? 100 : game.score + s;
 					game.score = game.score < 0 ? 0 : game.score;
 					
 					game.drawScorer();
+				},
+				
+				decreaseScore: function()
+				{
+					game.updateScore(-5);
 				},
 				
 				detachScorer: function(){
