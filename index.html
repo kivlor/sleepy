@@ -7,6 +7,9 @@
 		
 		<link href="css/core.css" rel="stylesheet" type="text/css" />
 		<script src="js/jquery.js"></script>
+		
+		<meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=no;"/>
+		<meta name="apple-mobile-web-app-capable" content="yes"/>
 	</head>
 	<body>
 		<div id="wrap">
@@ -14,6 +17,7 @@
 		</div>
 		
 		<script type="text/javascript">
+			
 			jQuery(function($){
 				// change no js message			
 				$('#bubble').text('...');
@@ -28,6 +32,9 @@
 				// set some defaults
 				window:			$(window),
 				canvas:			$('body'),
+				
+				// is ipad
+				is_ipad:		navigator.userAgent.match(/iPad/i) !== null ? true : false,
 				
 				firstRun: 		true,
 				running: 		false,
@@ -53,18 +60,40 @@
 				{
 					// calibrate
 					game.calibrate();
-									
-					// change the game message
-					game.msg.text('Press spacebar to start...');
-					
-					//set spacebar start
-					game.window.on('keypress', function(e){
-						if(game.running === false && e.keyCode === 32)
-						{
-							game.msg.fadeOut(100, function(){ $(this).text(''); });
-							game.startGame();
-						}
-					});
+								
+					if(game.is_ipad)
+					{
+						// change the game message
+						game.msg.text('Touch to start...');
+						
+						//set spacebar start
+						game.window.on('touchstart', function(e){
+							if(game.running === false)
+							{
+								game.msg.fadeOut(100, function(){ $(this).text(''); });
+								game.startGame();
+							}
+						});
+						
+						//disable scrolling
+						game.canvas.on('touchmove', function(e){
+							e.preventDefault();
+						});
+					}
+					else
+					{
+						// change the game message
+						game.msg.text('Press spacebar to start...');
+						
+						//set spacebar start
+						game.window.on('keypress', function(e){
+							if(game.running === false && e.keyCode === 32)
+							{
+								game.msg.fadeOut(100, function(){ $(this).text(''); });
+								game.startGame();
+							}
+						});
+					}
 					
 					// set images
 					game.num = new Image();
@@ -82,25 +111,31 @@
 				
 				calibrate: function()
 				{
+					// if ipad, make touch harder
+					if(game.is_ipad)
+					{
+						game.pps = 400;
+					}
+				
 					// set calc vars
 					game.wwidth = game.window.width();
 					game.wheight = $(window).height();
 					
 					game.fallspace = [0,game.wwidth];
 					
-					game.falltime = parseInt((this.wheight / this.pps) * 1000); // the time it should take a stimlant to fall
-					game.underground = parseInt(this.wheight + 75 + 10); // the top position to hide an element below the viewport
+					game.falltime = parseInt((game.wheight / game.pps) * 1000); // the time it should take a stimlant to fall
+					game.underground = parseInt(game.wheight + 75 + 10); // the top position to hide an element below the viewport
 				},
 				
 				finish: function()
 				{
 					if(game.score > 50)
 					{
-						game.msg.text('Rad, you kept yourself awake! Press spacebar to try again...').fadeIn(100);
+						game.msg.text('Rad, you kept yourself awake! ' + (game.is_ipad ? 'Touch' : 'Press spacebar') + ' to try again...').fadeIn(100);
 					}
 					else
 					{
-						game.msg.text('Eeeek, you fell asleep! Press spacebar to try again...').fadeIn(100);
+						game.msg.text('Eeeek, you fell asleep! ' + (game.is_ipad ? 'Touch' : 'Press spacebar') + ' to try again...').fadeIn(100);
 					}
 					
 					game.score = 100;
@@ -287,7 +322,7 @@
 						left: l,
 						zIndex: 10,
 					})
-					.bind('click', function(){
+					.bind('click touchstart', function(){
 						$(this).remove();
 						
 						game.updateScore(v.p);
